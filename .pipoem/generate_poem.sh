@@ -42,7 +42,7 @@ fi
 DAYS_ALIVE=$(( ( $(date +%s) - $(date -d "$START_DATE" +%s) ) / 86400 ))
 TOTAL_POEMS=$(find "$REPO_DIR" -maxdepth 1 -name "[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9]_[0-9][0-9].txt" 2>/dev/null | wc -l)
 
-# ── Letztes Gedicht laden (max 20 Zeilen damit Kontext nicht überläuft) ──
+# ── Letztes Gedicht laden (max 20 Zeilen) ──
 LAST_POEM_FILE=$(find "$REPO_DIR" -maxdepth 1 -name "[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9]_[0-9][0-9].txt" 2>/dev/null | sort | tail -n 1)
 if [ -n "$LAST_POEM_FILE" ]; then
   LAST_POEM=$(tail -n 20 "$LAST_POEM_FILE")
@@ -58,10 +58,11 @@ It is $DAYTIME on $TIMESTAMP. Season: $SEASON. Day $DAY_OF_YEAR of $YEAR.
 Your last poem was:
 $LAST_POEM
 
-Write a new poem now. Choose your own theme, form, length, and language. Let the time of day, the season, and your own history guide you. Only the poem. No title unless it is part of the poem. No comments, no explanation.
----BEGIN POEM---"
+Write a new poem now. Choose your own theme, form, length, and language. Let the time of day, the season, and your own history guide you. Only the poem. No title unless it is part of the poem. No comments, no explanation."
 
 # ── LLM aufrufen ──
+# --no-display-prompt unterdrückt den Prompt in stdout
+# was nach dem Banner-Filter übrig bleibt ist das reine Gedicht
 POEM=$("$LLAMA" \
   --model "$MODEL" \
   --single-turn \
@@ -74,8 +75,7 @@ POEM=$("$LLAMA" \
   --ctx-size 4096 \
   --log-disable \
   -p "$PROMPT" 2>/dev/null \
-  | grep -v "^▄\|^██\|^build\|^model\|^modalities\|^available\|^  /\|^> \|^\[.*t/s\|^Exiting\|^Loading\|██\|▀▀" \
-  | awk 'found; /^---BEGIN POEM---$/{found=1}')
+  | grep -v "██\|▀▀\|▄▄\|^build\|^model\|^modalities\|^available\|^  /\|^> \|^\[.*t/s\|^Exiting\|^Loading")
 
 # ── Output prüfen ──
 if [ -z "$(echo "$POEM" | tr -d '[:space:]')" ]; then
