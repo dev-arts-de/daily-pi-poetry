@@ -12,7 +12,6 @@ MODEL="/home/iqwrwq/models/tinyllama.Q4_K_M.gguf"
 LLAMA="/home/iqwrwq/llama.cpp/build/bin/llama-cli"
 LOG="$CONF_DIR/poem_gen.log"
 START_DATE="2026-02-22"
-SENTINEL="---BEGIN POEM---"
 
 DATE_FILE=$(date +%d-%m-%Y)
 TIME_FILE=$(date +%H_%M)
@@ -41,13 +40,12 @@ fi
 
 # ── Projektstatistik ──
 DAYS_ALIVE=$(( ( $(date +%s) - $(date -d "$START_DATE" +%s) ) / 86400 ))
-# Nur Dateien die dem Datumsmuster entsprechen: DD-MM-YYYY-HH_MM.txt
 TOTAL_POEMS=$(find "$REPO_DIR" -maxdepth 1 -name "[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9]_[0-9][0-9].txt" 2>/dev/null | wc -l)
 
-# ── Letztes Gedicht laden ──
+# ── Letztes Gedicht laden (max 20 Zeilen damit Kontext nicht überläuft) ──
 LAST_POEM_FILE=$(find "$REPO_DIR" -maxdepth 1 -name "[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9]_[0-9][0-9].txt" 2>/dev/null | sort | tail -n 1)
 if [ -n "$LAST_POEM_FILE" ]; then
-  LAST_POEM=$(cat "$LAST_POEM_FILE")
+  LAST_POEM=$(tail -n 20 "$LAST_POEM_FILE")
 else
   LAST_POEM="(no previous poem — this is the beginning)"
 fi
@@ -61,9 +59,9 @@ Your last poem was:
 $LAST_POEM
 
 Write a new poem now. Choose your own theme, form, length, and language. Let the time of day, the season, and your own history guide you. Only the poem. No title unless it is part of the poem. No comments, no explanation.
-$SENTINEL"
+---BEGIN POEM---"
 
-# ── LLM aufrufen — alles nach dem Sentinel nehmen ──
+# ── LLM aufrufen ──
 POEM=$("$LLAMA" \
   --model "$MODEL" \
   --single-turn \
@@ -73,7 +71,7 @@ POEM=$("$LLAMA" \
   --temp 0.9 \
   --top-p 0.95 \
   --repeat-penalty 1.1 \
-  --ctx-size 2048 \
+  --ctx-size 4096 \
   --log-disable \
   -p "$PROMPT" 2>/dev/null \
   | grep -v "^▄\|^██\|^build\|^model\|^modalities\|^available\|^  /\|^> \|^\[.*t/s\|^Exiting\|^Loading\|██\|▀▀" \
