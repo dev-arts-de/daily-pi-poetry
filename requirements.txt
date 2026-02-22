@@ -1,2 +1,0 @@
-markovify==0.9.4
-Unidecode==1.4.0
