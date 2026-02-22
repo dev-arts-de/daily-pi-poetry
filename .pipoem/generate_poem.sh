@@ -12,6 +12,7 @@ MODEL="/home/iqwrwq/models/tinyllama.Q4_K_M.gguf"
 LLAMA="/home/iqwrwq/llama.cpp/build/bin/llama-cli"
 LOG="$CONF_DIR/poem_gen.log"
 START_DATE="2026-02-22"
+SENTINEL="---BEGIN POEM---"
 
 DATE_FILE=$(date +%d-%m-%Y)
 TIME_FILE=$(date +%H_%M)
@@ -40,10 +41,11 @@ fi
 
 # ── Projektstatistik ──
 DAYS_ALIVE=$(( ( $(date +%s) - $(date -d "$START_DATE" +%s) ) / 86400 ))
-TOTAL_POEMS=$(find "$REPO_DIR" -maxdepth 1 -name "*.txt" 2>/dev/null | wc -l)
+# Nur Dateien die dem Datumsmuster entsprechen: DD-MM-YYYY-HH_MM.txt
+TOTAL_POEMS=$(find "$REPO_DIR" -maxdepth 1 -name "[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9]_[0-9][0-9].txt" 2>/dev/null | wc -l)
 
 # ── Letztes Gedicht laden ──
-LAST_POEM_FILE=$(find "$REPO_DIR" -maxdepth 1 -name "*.txt" 2>/dev/null | sort | tail -n 1)
+LAST_POEM_FILE=$(find "$REPO_DIR" -maxdepth 1 -name "[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9]-[0-9][0-9]_[0-9][0-9].txt" 2>/dev/null | sort | tail -n 1)
 if [ -n "$LAST_POEM_FILE" ]; then
   LAST_POEM=$(cat "$LAST_POEM_FILE")
 else
@@ -58,9 +60,10 @@ It is $DAYTIME on $TIMESTAMP. Season: $SEASON. Day $DAY_OF_YEAR of $YEAR.
 Your last poem was:
 $LAST_POEM
 
-Write a new poem now. Choose your own theme, form, length, and language. Let the time of day, the season, and your own history guide you. Only the poem. No title unless it is part of the poem. No comments, no explanation."
+Write a new poem now. Choose your own theme, form, length, and language. Let the time of day, the season, and your own history guide you. Only the poem. No title unless it is part of the poem. No comments, no explanation.
+$SENTINEL"
 
-# ── LLM aufrufen ──
+# ── LLM aufrufen — alles nach dem Sentinel nehmen ──
 POEM=$("$LLAMA" \
   --model "$MODEL" \
   --single-turn \
@@ -73,7 +76,8 @@ POEM=$("$LLAMA" \
   --ctx-size 2048 \
   --log-disable \
   -p "$PROMPT" 2>/dev/null \
-  | grep -v "^▄\|^██\|^build\|^model\|^modalities\|^available\|^  /\|^> \|^\[.*t/s\|^Exiting\|^Loading\|██\|▀▀")
+  | grep -v "^▄\|^██\|^build\|^model\|^modalities\|^available\|^  /\|^> \|^\[.*t/s\|^Exiting\|^Loading\|██\|▀▀" \
+  | awk 'found; /^---BEGIN POEM---$/{found=1}')
 
 # ── Output prüfen ──
 if [ -z "$(echo "$POEM" | tr -d '[:space:]')" ]; then
@@ -81,7 +85,7 @@ if [ -z "$(echo "$POEM" | tr -d '[:space:]')" ]; then
   exit 1
 fi
 
-# ── Poem-Datei schreiben ──
+# ── Poem-Datei schreiben — nur das Gedicht ──
 POEM_FILE="$REPO_DIR/${DATE_FILE}-${TIME_FILE}.txt"
 printf '%s\n' "$POEM" > "$POEM_FILE"
 
