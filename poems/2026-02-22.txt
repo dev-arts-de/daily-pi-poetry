@@ -1,0 +1,43 @@
+
+Loading model... 
+
+
+▄▄ ▄▄
+██ ██
+██ ██  ▀▀█▄ ███▄███▄  ▀▀█▄    ▄████ ████▄ ████▄
+██ ██ ▄█▀██ ██ ██ ██ ▄█▀██    ██    ██ ██ ██ ██
+██ ██ ▀█▄██ ██ ██ ██ ▀█▄██ ██ ▀████ ████▀ ████▀
+                                    ██    ██
+                                    ▀▀    ▀▀
+
+build      : b8124-35715657c
+model      : tinyllama.Q4_K_M.gguf
+modalities : text
+
+available commands:
+  /exit or Ctrl+C     stop or exit
+  /regen              regenerate the last response
+  /clear              clear the chat history
+  /read               add a text file
+
+
+> Write ONE short poem in german (8–14 lines). Minimal. No title. No markdown. No emojis. Output only the poem.
+
+
+In the cold, bleak winter of the heartland's fields,
+A single, frozen snowflake falls, a fragile seed,
+An ode to hope, born from despair,
+For every flake that crunches on sandy soil.
+
+Each one a reminder, of our ancestors' loss,
+Of the tragedies that we as humans must endure,
+A beacon of light in a dark and forlorn place,
+That seeks to brighten even in this blackest night.
+
+In these fields where time is frozen and forgotten,
+The snowflake becomes something more than just
+
+
+> 
+
+Exiting...
